@@ -145,7 +145,11 @@ public class Simulation {
             Poisson poisson = (Poisson) ressource;
             int prise = poisson.getQuantite();
             bateau.poissonsPrises(prise);
-            poissonsPeches += prise;
+            if (RNG.nextDouble() < 0.05) {
+                poissonsPeches -= prise*2;
+            } else {
+                poissonsPeches += prise;
+            }
             terrain.viderCase(ressource.getLigne(), ressource.getColonne());
         } else if (ressource instanceof HumainNaufrage) {
             bateau.humainSauve();
@@ -352,7 +356,7 @@ public class Simulation {
         System.out.println("Poissons pêchés : " + poissonsPeches);
         System.out.println("Poissons perdus : " + poissonsPerdus);
         System.out.println("Ressources restantes : " + terrain.compterRessources());
-        if humainsSauves > humainsManges && poissonsPeches > poissonsPerdus) {
+        if (humainsSauves > humainsManges && poissonsPeches > poissonsPerdus) {
             System.out.println("Bilan positif : les humains ont été majoritairement sauvés et les poissons pêchés dépassent les pertes.");
         } else if (humainsManges > humainsSauves && poissonsPerdus > poissonsPeches) {
             System.out.println("Bilan négatif : les humains ont été majoritairement mangés et les pertes de poissons dépassent les prises.");
