@@ -2,24 +2,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Classe principale de la simulation d'écosystème marin.
- * Gère l'initialisation, les étapes de simulation et l'affichage.
- */
 public class Simulation {
     private static final int NB_LIGNES = 10;
     private static final int NB_COLONNES = 10;
     private static final int NOMBRE_ETAPES = 12;
+    private static final int TEMPS_PAUSE_MS = 2000;
+    private static final String ANSI_RESET = "\u001B[0m";
+    private static final String ANSI_RED = "\u001B[31m";
+    private static final String ANSI_BLUE = "\u001B[34m";
+    private static final String ANSI_MAGENTA = "\u001B[35m";
     private static final Random RNG = new Random();
+
     private final Terrain terrain;
     private final List<Agent> agents;
     private int humainsSauves = 0;
-    private int poissonsPeches = 0;
     private int humainsManges = 0;
+    private int poissonsPeches = 0;
 
-    /**
-     * Constructeur de la simulation : initialise le terrain, les ressources et les agents.
-     */
     public Simulation() {
         terrain = new Terrain(NB_LIGNES, NB_COLONNES);
         agents = new ArrayList<>();
@@ -28,23 +27,16 @@ public class Simulation {
         terrain.verifierPositionRessources();
     }
 
-    /**
-     * Méthode principale pour lancer la simulation.
-     * @param args Arguments de ligne de commande (non utilisés).
-     */
     public static void main(String[] args) {
         Simulation simulation = new Simulation();
         simulation.lancer();
     }
 
-    /**
-     * Initialise les ressources sur le terrain : poissons, sacs de plastique, humains naufragés.
-     */
     private void initialiserRessources() {
         for (int i = 0; i < 20; i++) {
             placerRessourceAleatoire(new Poisson(3 + RNG.nextInt(3)));
         }
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 3; i++) {
             placerRessourceAleatoire(new SacPlastique());
         }
         for (int i = 0; i < 6; i++) {
@@ -52,31 +44,41 @@ public class Simulation {
         }
     }
 
-    /**
-     * Initialise les agents : requins et bateaux à positions aléatoires.
-     */
     private void initialiserAgents() {
         agents.add(new Requin(1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES));
         agents.add(new Requin(1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES));
         agents.add(new Bateau(1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES));
     }
 
-    /**
-     * Lance la simulation : affiche l'état initial, boucle sur les étapes, affiche la conclusion.
-     */
     private void lancer() {
         afficherEtat(0);
+        attendre();
         for (int etape = 1; etape <= NOMBRE_ETAPES; etape++) {
             mettreAJourLesEtapes(etape);
             afficherEtat(etape);
+            attendre();
         }
         afficherConclusion();
     }
 
-    /**
-     * Met à jour les étapes de simulation : croissance des poissons, actions des agents, interactions, nettoyage.
-     * @param etape Le numéro de l'étape actuelle.
-     */
+    private void attendre() {
+        try {
+            Thread.sleep(TEMPS_PAUSE_MS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private String coloriserAgent(Agent agent) {
+        if (agent instanceof Requin) {
+            return ANSI_RED + agent + ANSI_RESET;
+        }
+        if (agent instanceof Bateau) {
+            return ANSI_BLUE + agent + ANSI_RESET;
+        }
+        return agent.toString();
+    }
+
     private void mettreAJourLesEtapes(int etape) {
         croitreLesPoissons();
         List<Agent> snapshot = new ArrayList<>(agents);
@@ -89,9 +91,6 @@ public class Simulation {
         nettoyerMortEtRessources();
     }
 
-    /**
-     * Fait croître tous les poissons sur le terrain.
-     */
     private void croitreLesPoissons() {
         for (Ressource r : terrain.lesRessources()) {
             if (r instanceof Poisson) {
@@ -100,10 +99,6 @@ public class Simulation {
         }
     }
 
-
-    /**
-     * Résout les interactions entre agents et ressources.
-     */
     private void resoudreInteractions() {
         for (Agent agent : new ArrayList<>(agents)) {
             if (!agent.isAlive()) {
@@ -120,10 +115,6 @@ public class Simulation {
         resoudreConflitsRequinBateau();
     }
 
-    /**
-     * Applique l'effet du plastique sur le requin : perte d'énergie.
-     * @param requin Le requin affecté.
-     */
     private void appliquerEffetPlastique(Requin requin) {
         ResourceMarine ressource = ressourcesSurCase(requin.getLigne(), requin.getColonne());
         if (ressource instanceof SacPlastique) {
@@ -131,36 +122,29 @@ public class Simulation {
         }
     }
 
-    /**
-     * Permet au requin de manger une ressource sur sa case.
-     * @param requin Le requin qui mange.
-     */
     private void mangerRessource(Requin requin) {
         ResourceMarine ressource = ressourcesSurCase(requin.getLigne(), requin.getColonne());
         if (ressource instanceof Poisson) {
             Poisson poisson = (Poisson) ressource;
-            int prise = Math.min(2, poisson.getQuantite());
-            poisson.setQuantite(poisson.getQuantite() - prise);
-            requin.energie += prise;
+            int prise = poisson.getQuantite();
+            poisson.setQuantite(0);
+            requin.energie += 1;
+            terrain.viderCase(ressource.getLigne(), ressource.getColonne());
         } else if (ressource instanceof HumainNaufrage) {
-            requin.energie += 6;
+            requin.energie += 2;
             humainsManges++;
             terrain.viderCase(ressource.getLigne(), ressource.getColonne());
         }
     }
 
-    /**
-     * Permet au bateau de pêcher ou sauver sur sa case.
-     * @param bateau Le bateau qui agit.
-     */
     private void pecherEtSauver(Bateau bateau) {
         ResourceMarine ressource = ressourcesSurCase(bateau.getLigne(), bateau.getColonne());
         if (ressource instanceof Poisson) {
             Poisson poisson = (Poisson) ressource;
-            int prise = Math.min(2, poisson.getQuantite());
-            poisson.setQuantite(poisson.getQuantite() - prise);
+            int prise = poisson.getQuantite();
             bateau.poissonsPrises(prise);
             poissonsPeches += prise;
+            terrain.viderCase(ressource.getLigne(), ressource.getColonne());
         } else if (ressource instanceof HumainNaufrage) {
             bateau.humainSauve();
             humainsSauves++;
@@ -168,9 +152,6 @@ public class Simulation {
         }
     }
 
-    /**
-     * Résout les conflits entre requins et bateaux sur la même case.
-     */
     private void resoudreConflitsRequinBateau() {
         for (int i = 0; i < agents.size(); i++) {
             for (int j = i + 1; j < agents.size(); j++) {
@@ -178,33 +159,26 @@ public class Simulation {
                 Agent b = agents.get(j);
                 if (a.isAlive() && b.isAlive() && memeCase(a, b)) {
                     if (a instanceof Requin && b instanceof Bateau) {
-                        combattre((Requin) a, (Bateau) b);
+                        b.energie = Math.max(0, b.energie - 2);
+                        a.energie = Math.max(0, a.energie - 1);
                     } else if (a instanceof Bateau && b instanceof Requin) {
-                        combattre((Requin) b, (Bateau) a);
+                        a.energie = Math.max(0, a.energie - 2);
+                        b.energie = Math.max(0, b.energie - 1);
+                    } else if (a instanceof Requin && b instanceof Requin) {
+                        a.energie = Math.max(0, a.energie - 2);
+                        b.energie = Math.max(0, b.energie - 2);
                     }
                 }
             }
         }
     }
 
-    /**
-     * Gère le combat entre un requin et un bateau.
-     * @param requin Le requin.
-     * @param bateau Le bateau.
-     */
-    private void combattre(Requin requin, Bateau bateau) {
-        if (bateau.energie >= requin.energie) {
-            requin.energie = Math.max(0, requin.energie - 1);
-            bateau.energie = Math.max(0, bateau.energie - 2);
-        } else {
-            bateau.energie = 0;
-        }
-    }
-
-    /**
-     * Nettoie les agents morts et les ressources épuisées.
-     */
     private void nettoyerMortEtRessources() {
+        for (Agent agent : new ArrayList<>(agents)) {
+            if (!agent.isAlive() && agent instanceof Bateau) {
+                humainsSauves -= ((Bateau) agent).getHumainsSauves();
+            }
+        }
         agents.removeIf(agent -> !agent.isAlive());
         for (Ressource r : new ArrayList<>(terrain.lesRessources())) {
             if (r.getQuantite() <= 0) {
@@ -213,22 +187,10 @@ public class Simulation {
         }
     }
 
-    /**
-     * Vérifie si deux entités sont sur la même case.
-     * @param a Première entité.
-     * @param b Seconde entité.
-     * @return true si même case.
-     */
     private boolean memeCase(Entite a, Entite b) {
         return a.getLigne() == b.getLigne() && a.getColonne() == b.getColonne();
     }
 
-    /**
-     * Retourne la ressource marine sur une case donnée.
-     * @param ligne La ligne.
-     * @param colonne La colonne.
-     * @return La ressource, ou null.
-     */
     private ResourceMarine ressourcesSurCase(int ligne, int colonne) {
         Ressource contenu = terrain.getCase(ligne, colonne);
         if (contenu instanceof ResourceMarine) {
@@ -237,10 +199,6 @@ public class Simulation {
         return null;
     }
 
-    /**
-     * Place une ressource aléatoirement sur une case vide.
-     * @param ressource La ressource à placer.
-     */
     private void placerRessourceAleatoire(Ressource ressource) {
         while (true) {
             int lig = 1 + RNG.nextInt(NB_LIGNES);
@@ -253,23 +211,117 @@ public class Simulation {
         }
     }
 
-    /**
-     * Affiche l'état de la simulation à une étape donnée.
-     * @param etape Le numéro de l'étape.
-     */
+    private void afficherGrilleAgentsEtRessources() {
+        System.out.println("+------+------+------+------+------+------+------+------+------+------+");
+        for (int lig = 1; lig <= NB_LIGNES; lig++) {
+            for (int col = 1; col <= NB_COLONNES; col++) {
+                System.out.print("|");
+            System.out.print(coloriserCellule(padderCellule(getCelluleTexte(lig, col)), lig, col));
+        }
+            System.out.println("|");
+            System.out.println("+------+------+------+------+------+------+------+------+------+------+");
+        }
+    }
+
+    private String padderCellule(String contenu) {
+        int taille = 6;
+        if (contenu.length() >= taille) {
+            return contenu.substring(0, taille);
+        }
+        StringBuilder sb = new StringBuilder(contenu);
+        while (sb.length() < taille) {
+            sb.append(' ');
+        }
+        return sb.toString();
+    }
+
+    private String getCelluleTexte(int lig, int col) {
+        StringBuilder affichage = new StringBuilder();
+        Ressource ressource = terrain.getCase(lig, col);
+        if (ressource instanceof ResourceMarine) {
+            affichage.append(shortResource((ResourceMarine) ressource));
+        }
+        List<Agent> agentsCase = agentsSurCase(lig, col);
+        if (!agentsCase.isEmpty()) {
+            if (affichage.length() > 0) {
+                affichage.append('/');
+            }
+            affichage.append(shortAgent(agentsCase));
+        }
+        if (affichage.length() == 0) {
+            return "";
+        }
+        return affichage.toString();
+    }
+
+    private String shortResource(ResourceMarine ressource) {
+        if (ressource instanceof Poisson) {
+            return "Po";
+        }
+        if (ressource instanceof SacPlastique) {
+            return "SP";
+        }
+        if (ressource instanceof HumainNaufrage) {
+            return "HN";
+        }
+        return "Poule";
+    }
+
+    private List<Agent> agentsSurCase(int lig, int col) {
+        List<Agent> result = new ArrayList<>();
+        for (Agent agent : agents) {
+            if (agent.getLigne() == lig && agent.getColonne() == col) {
+                result.add(agent);
+            }
+        }
+        return result;
+    }
+
+    private String coloriserCellule(String contenu, int lig, int col) {
+        List<Agent> agentsCase = agentsSurCase(lig, col);
+        if (agentsCase.isEmpty()) {
+            return contenu;
+        }
+        String color;
+        if (agentsCase.size() == 1) {
+            Agent agent = agentsCase.get(0);
+            if (agent instanceof Requin) {
+                color = ANSI_RED;
+            } else if (agent instanceof Bateau) {
+                color = ANSI_BLUE;
+            } else {
+                color = ANSI_MAGENTA;
+            }
+        } else {
+            color = ANSI_MAGENTA;
+        }
+        return color + contenu + ANSI_RESET;
+    }
+
+    private String shortAgent(List<Agent> agentsCase) {
+        if (agentsCase.size() == 1) {
+            Agent agent = agentsCase.get(0);
+            if (agent instanceof Requin) {
+                return "Rq";
+            }
+            if (agent instanceof Bateau) {
+                return "Bat";
+            }
+            return "Ag";
+        }
+        return "Bagarre" + agentsCase.size();
+    }
+
     private void afficherEtat(int etape) {
         System.out.println("\n--- Étape " + etape + " ---");
-        terrain.afficher(6);
+        afficherGrilleAgentsEtRessources();
         System.out.println("Agents en vie :");
         for (Agent agent : agents) {
-            System.out.println("- " + agent);
+            System.out.println("- " + coloriserAgent(agent));
         }
         System.out.println("Humains sauvés : " + humainsSauves + " | Humains mangés : " + humainsManges + " | Poissons pêchés : " + poissonsPeches);
     }
 
-    /**
-     * Affiche le bilan final de la simulation.
-     */
     private void afficherConclusion() {
         System.out.println("\n--- Bilan final ---");
         System.out.println("Agents restants : " + agents.size());
@@ -279,4 +331,3 @@ public class Simulation {
         System.out.println("Ressources restantes : " + terrain.compterRessources());
     }
 }
-
