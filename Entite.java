@@ -2,7 +2,7 @@
  * Interface pour les entités positionnables sur la grille de la simulation.
  * Définit les méthodes de base pour obtenir et définir la position, le type et une description.
  */
-public interface Entity {
+public interface Entite {
     /**
      * Retourne la ligne actuelle de l'entité.
      * @return La ligne.

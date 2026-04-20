@@ -1,8 +1,8 @@
 /**
- * Classe abstraite pour les ressources marines, étendant Ressource et implémentant Entity.
+ * Classe abstraite pour les ressources marines, étendant Ressource et implémentant Entite.
  * Permet aux ressources d'avoir une position sur la grille.
  */
-public abstract class ResourceMarine extends Ressource implements Entity {
+public abstract class ResourceMarine extends Ressource implements Entite {
     /**
      * Constructeur pour créer une ressource marine.
      * @param type Le type de la ressource (ex: "Poisson").

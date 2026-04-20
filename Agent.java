@@ -5,7 +5,7 @@ import java.util.Random;
  * Classe abstraite représentant un agent mobile dans la simulation.
  * Les agents ont de l'énergie, une position sur la grille et peuvent se déplacer.
  */
-public abstract class Agent implements Entity {
+public abstract class Agent implements Entite {
     protected static final Random RNG = new Random();
     protected final String type;
     protected int energie;
@@ -85,7 +85,7 @@ public abstract class Agent implements Entity {
      * @param other L'autre entité.
      * @return La distance.
      */
-    protected int distance(Entity other) {
+    protected int distance(Entite other) {
         return distance(other.getLigne(), other.getColonne());
     }
 
