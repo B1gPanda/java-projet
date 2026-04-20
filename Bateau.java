@@ -5,40 +5,106 @@ import java.util.List;
  * Le bateau cherche les ressources (poissons, humains) et les requins proches pour se déplacer.
  */
 public class Bateau extends Agent {
+    /**
+     * Énumération des stratégies possibles pour un bateau.
+     */
+    public enum Strategie {
+        PROTECTEUR,  // Priorité aux naufragés
+        PECHEUR,     // Priorité à la pêche
+        CHASSEUR     // Priorité à la chasse aux requins
+    }
+
     private int humainsSauves = 0;
     private int poissonsPris = 0;
+    private final Strategie strategie;
 
     /**
-     * Constructeur pour créer un bateau.
+     * Constructeur pour créer un bateau avec une stratégie.
+     * @param vie L'énergie initiale.
      * @param ligne La ligne initiale.
      * @param colonne La colonne initiale.
      * @param nbLignes Nombre total de lignes.
      * @param nbColonnes Nombre total de colonnes.
+     * @param strategie La stratégie du bateau (PROTECTEUR ou PECHEUR).
      */
-    public Bateau(int vie, int ligne, int colonne, int nbLignes, int nbColonnes) {
+    public Bateau(int vie, int ligne, int colonne, int nbLignes, int nbColonnes, Strategie strategie) {
         super("Bateau", vie, ligne, colonne, nbLignes, nbColonnes);
+        this.strategie = strategie;
     }
 
     /**
-     * Définit l'action du bateau à chaque tour : se déplacer vers la ressource la plus proche.
-     * Le bateau défend les naufragés si un requin s'approche (distance <= 3).
+     * Définit l'action du bateau à chaque tour selon sa stratégie.
      * @param terrain Le terrain de la simulation.
      * @param allAgents La liste de tous les agents.
      */
     @Override
     public void agir(Terrain terrain, List<Agent> allAgents) {
-        ResourceMarine cible = findNearestRessource(terrain);
         ResourceMarine humainProche = findNearestHumain(terrain);
+        ResourceMarine poissonProche = findNearestPoisson(terrain);
         Agent cibleRequin = findNearestAgent(allAgents, Requin.class);
-        
-        // Si un naufragé est proche et un requin aussi s'approche, défendre
-        if (humainProche != null && cibleRequin != null && distance(cibleRequin) <= 3) {
-            moveTowards(cibleRequin.getLigne(), cibleRequin.getColonne());
-        } else if (cible != null) {
-            moveTowards(cible.getLigne(), cible.getColonne());
-        } else {
-            moveRandomly();
+
+        if (strategie == Strategie.PROTECTEUR) {
+            // Mode protecteur : priorité aux naufragés
+            if (humainProche != null) {
+                moveTowards(humainProche.getLigne(), humainProche.getColonne());
+            } else if (poissonProche != null) {
+                moveTowards(poissonProche.getLigne(), poissonProche.getColonne());
+            } else {
+                moveRandomly();
+            }
+        } else if (strategie == Strategie.PECHEUR) {
+            // Mode pêcheur : priorité aux poissons
+            if (poissonProche != null) {
+                moveTowards(poissonProche.getLigne(), poissonProche.getColonne());
+            } else if (humainProche != null) {
+                moveTowards(humainProche.getLigne(), humainProche.getColonne());
+            } else {
+                moveRandomly();
+            }
+        } else if (strategie == Strategie.CHASSEUR) {
+            // Mode chasseur : priorité aux requins
+            if (cibleRequin != null && distance(cibleRequin) <= 2) {
+                // Attaque le requin à portée (distance 2)
+                cibleRequin.energie = Math.max(0, cibleRequin.energie - 5);
+            } else if (cibleRequin != null) {
+                moveTowards(cibleRequin.getLigne(), cibleRequin.getColonne());
+            } else if (humainProche != null) {
+                moveTowards(humainProche.getLigne(), humainProche.getColonne());
+            } else if (poissonProche != null) {
+                moveTowards(poissonProche.getLigne(), poissonProche.getColonne());
+            } else {
+                moveRandomly();
+            }
         }
+    }
+
+    /**
+     * Retourne la stratégie du bateau.
+     * @return La stratégie (PROTECTEUR ou PECHEUR).
+     */
+    public Strategie getStrategie() {
+        return strategie;
+    }
+
+    /**
+     * Trouve le poisson le plus proche.
+     * @param terrain Le terrain contenant les ressources.
+     * @return Le poisson le plus proche, ou null si aucun.
+     */
+    private ResourceMarine findNearestPoisson(Terrain terrain) {
+        ResourceMarine meilleur = null;
+        int distanceMin = Integer.MAX_VALUE;
+        for (Ressource r : terrain.lesRessources()) {
+            if (r instanceof Poisson) {
+                ResourceMarine rm = (ResourceMarine) r;
+                int dist = distance(rm.getLigne(), rm.getColonne());
+                if (dist < distanceMin) {
+                    distanceMin = dist;
+                    meilleur = rm;
+                }
+            }
+        }
+        return meilleur;
     }
 
     /**

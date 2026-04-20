@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Scanner;
 
 public class Simulation {
     private static final int NB_LIGNES = 10;
@@ -19,10 +20,12 @@ public class Simulation {
     private int humainsManges = 0;
     private int poissonsPeches = 0;
     private int poissonsPerdus = 0;
+    private Bateau.Strategie strategieChoisie;
 
     public Simulation() {
         terrain = new Terrain(NB_LIGNES, NB_COLONNES);
         agents = new ArrayList<>();
+        selectionnerStrategie();
         initialiserRessources();
         initialiserAgents();
         terrain.verifierPositionRessources();
@@ -31,6 +34,35 @@ public class Simulation {
     public static void main(String[] args) {
         Simulation simulation = new Simulation();
         simulation.lancer();
+    }
+
+    /**
+     * Demande à l'utilisateur de choisir la stratégie des bateaux.
+     */
+    private void selectionnerStrategie() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("=== Stratégie des bateaux ===");
+        System.out.println("1. PROTECTEUR - Les bateaux sauvent en priorité les naufragés");
+        System.out.println("2. PECHEUR - Les bateaux pêchent en priorité les poissons");
+        System.out.println("3. CHASSEUR - Les bateaux chassent en priorité les requins");
+        System.out.print("Choisissez (1, 2 ou 3, ou tapez 'protecteur', 'pecheur' ou 'chasseur') : ");
+
+        String choix = scanner.nextLine().trim().toLowerCase();
+        if (choix.equals("1") || choix.equals("protecteur")) {
+            strategieChoisie = Bateau.Strategie.PROTECTEUR;
+            System.out.println("=> Mode PROTECTEUR : Les bateaux à sauver les humains !");
+        } else if (choix.equals("2") || choix.equals("pecheur")) {
+            strategieChoisie = Bateau.Strategie.PECHEUR;
+            System.out.println("=> Mode PÈCHEUR : Les bateaux en quête de poissons !");
+        } else if (choix.equals("3") || choix.equals("chasseur")) {
+            strategieChoisie = Bateau.Strategie.CHASSEUR;
+            System.out.println("=> Mode CHASSEUR : Les bateaux en chasse des requins !");
+        } else {
+            System.out.println("Choix invalide, mode PROTECTEUR par défaut.");
+            strategieChoisie = Bateau.Strategie.PROTECTEUR;
+        }
+        System.out.println();
+        scanner.close();
     }
 
     private void initialiserRessources() {
@@ -48,7 +80,7 @@ public class Simulation {
     private void initialiserAgents() {
         agents.add(new Requin(16, 1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES));
         agents.add(new Requin(16, 1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES));
-        agents.add(new Bateau(50, 1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES));
+        agents.add(new Bateau(50, 1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES, strategieChoisie));
     }
 
     private void lancer() {
@@ -151,6 +183,9 @@ public class Simulation {
             } else {
                 poissonsPeches += prise;
             }
+            // Si bateau en mode pêche, donne plus d'énergie
+            int energieBonus = (bateau.getStrategie() == Bateau.Strategie.PECHEUR) ? (prise + 2) : prise;
+            bateau.energie = Math.min(50, bateau.energie + energieBonus);
             terrain.viderCase(ressource.getLigne(), ressource.getColonne());
         } else if (ressource instanceof HumainNaufrage) {
             bateau.humainSauve();
