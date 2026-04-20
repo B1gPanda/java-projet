@@ -29,7 +29,7 @@ public class TestTerrain {
 			System.out.println("Ajout de " +ress1+" impossible, la case est occupée !");
 				
 		// On créé une autre ressource...
-		Ressource ress2 = new Ressource("Requin",4);
+		Ressource ress2 = new Ressource("Poule",4);
 		System.out.println("\nCréation de ress2="+ress2);
 		
 		// ... et on essaie de la placer à la même place
