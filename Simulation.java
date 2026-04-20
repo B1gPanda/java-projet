@@ -5,7 +5,7 @@ import java.util.Random;
 public class Simulation {
     private static final int NB_LIGNES = 10;
     private static final int NB_COLONNES = 10;
-    private static final int NOMBRE_ETAPES = 12;
+    private static final int NOMBRE_ETAPES = 25;
     private static final int TEMPS_PAUSE_MS = 2000;
     private static final String ANSI_RESET = "\u001B[0m";
     private static final String ANSI_RED = "\u001B[31m";
@@ -18,6 +18,7 @@ public class Simulation {
     private int humainsSauves = 0;
     private int humainsManges = 0;
     private int poissonsPeches = 0;
+    private int poissonsPerdus = 0;
 
     public Simulation() {
         terrain = new Terrain(NB_LIGNES, NB_COLONNES);
@@ -89,6 +90,7 @@ public class Simulation {
         }
         resoudreInteractions();
         nettoyerMortEtRessources();
+        gererNouvelleProductionDePoissons();
     }
 
     private void croitreLesPoissons() {
@@ -160,13 +162,18 @@ public class Simulation {
                 if (a.isAlive() && b.isAlive() && memeCase(a, b)) {
                     if (a instanceof Requin && b instanceof Bateau) {
                         b.energie = Math.max(0, b.energie - 2);
-                        a.energie = Math.max(0, a.energie - 1);
+                        a.energie = Math.max(0, a.energie - 3);
                     } else if (a instanceof Bateau && b instanceof Requin) {
                         a.energie = Math.max(0, a.energie - 2);
-                        b.energie = Math.max(0, b.energie - 1);
+                        b.energie = Math.max(0, b.energie - 3);
                     } else if (a instanceof Requin && b instanceof Requin) {
                         a.energie = Math.max(0, a.energie - 2);
                         b.energie = Math.max(0, b.energie - 2);
+                        if (a.energie == 0) {
+                            b.energie += 5;
+                        } else if (b.energie == 0) {
+                            a.energie += 5;
+                        }
                     }
                 }
             }
@@ -176,7 +183,11 @@ public class Simulation {
     private void nettoyerMortEtRessources() {
         for (Agent agent : new ArrayList<>(agents)) {
             if (!agent.isAlive() && agent instanceof Bateau) {
-                humainsSauves -= ((Bateau) agent).getHumainsSauves();
+                Bateau bateauMort = (Bateau) agent;
+                poissonsPerdus = bateauMort.poissonsPris();
+                humainsSauves -= bateauMort.getHumainsSauves();
+                humainsManges += bateauMort.getHumainsSauves();
+                poissonsPeches -= poissonsPerdus;
             }
         }
         agents.removeIf(agent -> !agent.isAlive());
@@ -312,6 +323,17 @@ public class Simulation {
         return "Bagarre" + agentsCase.size();
     }
 
+    /**
+     * Ajoute aléatoirement de nouveaux poissons sur la grille pendant la simulation.
+     * Chaque étape a 50% de chance d'ajouter un groupe de 2-3 poissons.
+     */
+    private void gererNouvelleProductionDePoissons() {
+        if (RNG.nextDouble() < 0.5) {
+            Poisson poisson = new Poisson(2 + RNG.nextInt(2));
+            placerRessourceAleatoire(poisson);
+        }
+    }
+
     private void afficherEtat(int etape) {
         System.out.println("\n--- Étape " + etape + " ---");
         afficherGrilleAgentsEtRessources();
@@ -319,7 +341,7 @@ public class Simulation {
         for (Agent agent : agents) {
             System.out.println("- " + coloriserAgent(agent));
         }
-        System.out.println("Humains sauvés : " + humainsSauves + " | Humains mangés : " + humainsManges + " | Poissons pêchés : " + poissonsPeches);
+        System.out.println("Humains sauvés : " + humainsSauves + " | Humains mangés : " + humainsManges + " | Poissons pêchés : " + poissonsPeches + " | Poissons perdus : " + poissonsPerdus);
     }
 
     private void afficherConclusion() {
@@ -328,6 +350,14 @@ public class Simulation {
         System.out.println("Humains sauvés : " + humainsSauves);
         System.out.println("Humains mangés : " + humainsManges);
         System.out.println("Poissons pêchés : " + poissonsPeches);
+        System.out.println("Poissons perdus : " + poissonsPerdus);
         System.out.println("Ressources restantes : " + terrain.compterRessources());
+        if humainsSauves > humainsManges && poissonsPeches > poissonsPerdus) {
+            System.out.println("Bilan positif : les humains ont été majoritairement sauvés et les poissons pêchés dépassent les pertes.");
+        } else if (humainsManges > humainsSauves && poissonsPerdus > poissonsPeches) {
+            System.out.println("Bilan négatif : les humains ont été majoritairement mangés et les pertes de poissons dépassent les prises.");
+        } else {
+            System.out.println("Bilan mitigé : un équilibre fragile entre sauvetage, prédation, pêche et pertes.");
+        }
     }
 }

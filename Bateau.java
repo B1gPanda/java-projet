@@ -16,7 +16,7 @@ public class Bateau extends Agent {
      * @param nbColonnes Nombre total de colonnes.
      */
     public Bateau(int ligne, int colonne, int nbLignes, int nbColonnes) {
-        super("Bateau", 16, ligne, colonne, nbLignes, nbColonnes);
+        super("Bateau", 50, ligne, colonne, nbLignes, nbColonnes);
     }
 
     /**
@@ -50,6 +50,14 @@ public class Bateau extends Agent {
      */
     public void poissonsPrises(int quantite) {
         poissonsPris += quantite;
+    }
+
+    /**
+     * Retourne le nombre de poissons pris par ce bateau.
+     * @return Le nombre de poissons pris.
+     */
+    public int poissonsPris() {
+        return poissonsPris;
     }
 
     /**

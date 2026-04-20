@@ -32,7 +32,7 @@ public class Requin extends Agent {
         } else {
             moveRandomly();
         }
-        energie = Math.max(0, energie - 1);
+        energie = Math.max(0, energie);
     }
 
     /**
