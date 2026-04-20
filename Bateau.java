@@ -15,8 +15,8 @@ public class Bateau extends Agent {
      * @param nbLignes Nombre total de lignes.
      * @param nbColonnes Nombre total de colonnes.
      */
-    public Bateau(int ligne, int colonne, int nbLignes, int nbColonnes) {
-        super("Bateau", 50, ligne, colonne, nbLignes, nbColonnes);
+    public Bateau(int vie, int ligne, int colonne, int nbLignes, int nbColonnes) {
+        super("Bateau", vie, ligne, colonne, nbLignes, nbColonnes);
     }
 
     /**

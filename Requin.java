@@ -12,8 +12,8 @@ public class Requin extends Agent {
      * @param nbLignes Nombre total de lignes.
      * @param nbColonnes Nombre total de colonnes.
      */
-    public Requin(int ligne, int colonne, int nbLignes, int nbColonnes) {
-        super("Requin", 12, ligne, colonne, nbLignes, nbColonnes);
+    public Requin(int vie,int ligne, int colonne, int nbLignes, int nbColonnes) {
+        super("Requin", vie, ligne, colonne, nbLignes, nbColonnes);
     }
 
     /**
