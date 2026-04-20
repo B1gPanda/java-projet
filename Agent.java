@@ -118,6 +118,14 @@ public abstract class Agent implements Entite {
     }
 
     /**
+     * Force l'agent à se séparer d'un autre en se déplaçant dans une direction aléatoire.
+     * Utilisé après un combat pour éviter les bagarres continues.
+     */
+    public void separer() {
+        moveRandomly();
+    }
+
+    /**
      * Méthode abstraite définissant l'action de l'agent à chaque tour.
      * @param terrain Le terrain de la simulation.
      * @param allAgents La liste de tous les agents.

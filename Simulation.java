@@ -146,7 +146,8 @@ public class Simulation {
             int prise = poisson.getQuantite();
             bateau.poissonsPrises(prise);
             if (RNG.nextDouble() < 0.05) {
-                poissonsPeches -= prise*2;
+                poissonsPeches = Math.max(0, poissonsPeches - 10);
+                poissonsPerdus += 10;
             } else {
                 poissonsPeches += prise;
             }
@@ -167,9 +168,13 @@ public class Simulation {
                     if (a instanceof Requin && b instanceof Bateau) {
                         b.energie = Math.max(0, b.energie - 2);
                         a.energie = Math.max(0, a.energie - 3);
+                        a.separer();
+                        b.separer();
                     } else if (a instanceof Bateau && b instanceof Requin) {
                         a.energie = Math.max(0, a.energie - 2);
                         b.energie = Math.max(0, b.energie - 3);
+                        a.separer();
+                        b.separer();
                     } else if (a instanceof Requin && b instanceof Requin) {
                         a.energie = Math.max(0, a.energie - 2);
                         b.energie = Math.max(0, b.energie - 2);
@@ -178,6 +183,8 @@ public class Simulation {
                         } else if (b.energie == 0) {
                             a.energie += 5;
                         }
+                        a.separer();
+                        b.separer();
                     }
                 }
             }
@@ -191,7 +198,7 @@ public class Simulation {
                 poissonsPerdus = bateauMort.poissonsPris();
                 humainsSauves -= bateauMort.getHumainsSauves();
                 humainsManges += bateauMort.getHumainsSauves();
-                poissonsPeches -= poissonsPerdus;
+                poissonsPeches = Math.max(0, poissonsPeches - poissonsPerdus);
             }
         }
         agents.removeIf(agent -> !agent.isAlive());

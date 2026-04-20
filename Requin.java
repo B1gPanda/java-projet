@@ -17,18 +17,16 @@ public class Requin extends Agent {
     }
 
     /**
-     * Définit l'action du requin à chaque tour : se déplacer vers la ressource ou bateau le plus proche, puis perdre 1 énergie.
+     * Définit l'action du requin à chaque tour : se déplacer vers la ressource la plus proche.
+     * Les requins ne poursuivent pas les bateaux, ils cherchent uniquement la nourriture.
      * @param terrain Le terrain de la simulation.
      * @param allAgents La liste de tous les agents.
      */
     @Override
     public void agir(Terrain terrain, List<Agent> allAgents) {
         ResourceMarine cible = findNearestRessource(terrain);
-        Agent cibleBateau = findNearestAgent(allAgents, Bateau.class);
         if (cible != null) {
             moveTowards(cible.getLigne(), cible.getColonne());
-        } else if (cibleBateau != null && distance(cibleBateau) <= 5) {
-            moveTowards(cibleBateau.getLigne(), cibleBateau.getColonne());
         } else {
             moveRandomly();
         }

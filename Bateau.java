@@ -20,21 +20,46 @@ public class Bateau extends Agent {
     }
 
     /**
-     * Définit l'action du bateau à chaque tour : se déplacer vers la ressource ou requin le plus proche.
+     * Définit l'action du bateau à chaque tour : se déplacer vers la ressource la plus proche.
+     * Le bateau défend les naufragés si un requin s'approche (distance <= 3).
      * @param terrain Le terrain de la simulation.
      * @param allAgents La liste de tous les agents.
      */
     @Override
     public void agir(Terrain terrain, List<Agent> allAgents) {
         ResourceMarine cible = findNearestRessource(terrain);
+        ResourceMarine humainProche = findNearestHumain(terrain);
         Agent cibleRequin = findNearestAgent(allAgents, Requin.class);
-        if (cible != null) {
-            moveTowards(cible.getLigne(), cible.getColonne());
-        } else if (cibleRequin != null && distance(cibleRequin) <= 5) {
+        
+        // Si un naufragé est proche et un requin aussi s'approche, défendre
+        if (humainProche != null && cibleRequin != null && distance(cibleRequin) <= 3) {
             moveTowards(cibleRequin.getLigne(), cibleRequin.getColonne());
+        } else if (cible != null) {
+            moveTowards(cible.getLigne(), cible.getColonne());
         } else {
             moveRandomly();
         }
+    }
+
+    /**
+     * Trouve le naufragé le plus proche.
+     * @param terrain Le terrain contenant les ressources.
+     * @return Le naufragé le plus proche, ou null si aucun.
+     */
+    private ResourceMarine findNearestHumain(Terrain terrain) {
+        ResourceMarine meilleur = null;
+        int distanceMin = Integer.MAX_VALUE;
+        for (Ressource r : terrain.lesRessources()) {
+            if (r instanceof HumainNaufrage) {
+                ResourceMarine rm = (ResourceMarine) r;
+                int dist = distance(rm.getLigne(), rm.getColonne());
+                if (dist < distanceMin) {
+                    distanceMin = dist;
+                    meilleur = rm;
+                }
+            }
+        }
+        return meilleur;
     }
 
     /**
