@@ -4,7 +4,7 @@ import java.util.List;
  * Classe représentant un requin, agent prédateur dans la simulation.
  * Le requin cherche les ressources (poissons, humains) et les bateaux proches pour se déplacer.
  */
-public class Requin extends Agent {
+public class Requin extends Agent implements Cloneable{
     /**
      * Constructeur pour créer un requin.
      * @param ligne La ligne initiale.
@@ -75,4 +75,14 @@ public class Requin extends Agent {
         }
         return meilleur;
     }
+
+   @Override
+    public Requin clone() {
+        try {
+            return (Requin) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("Clonage impossible");
+        }
+    }
+
 }

@@ -78,8 +78,11 @@ public class Simulation {
     }
 
     private void initialiserAgents() {
-        agents.add(new Requin(16, 1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES));
-        agents.add(new Requin(16, 1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES));
+        Requin r1 = new Requin(16, 1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES);
+        Requin r2 =  r1.clone();
+
+        agents.add(r1);
+        agents.add(r2);
         agents.add(new Bateau(50, 1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES, strategieChoisie));
     }
 
