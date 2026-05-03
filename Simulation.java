@@ -32,8 +32,8 @@ public class Simulation {
     }
 
     public static void main(String[] args) {
-        Simulation simulation = new Simulation();
-        simulation.lancer();
+        Simulation sim = new Simulation();
+        SimulationManager.getInstance().lancer(sim);
     }
 
     /**
@@ -86,7 +86,7 @@ public class Simulation {
         agents.add(new Bateau(50, 1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES, strategieChoisie));
     }
 
-    private void lancer() {
+    public void lancer() {
         afficherEtat(0);
         attendre();
         for (int etape = 1; etape <= NOMBRE_ETAPES; etape++) {
@@ -116,6 +116,15 @@ public class Simulation {
     }
 
     private void mettreAJourLesEtapes(int etape) {
+        try {
+            if (terrain.lesRessources().isEmpty()) {
+                throw new SimulationException("Plus aucune ressource !");
+            }
+        } catch (SimulationException e) {
+            System.out.println(e.getMessage());
+            return; // ⛔ stop le tour
+        }
+        
         croitreLesPoissons();
         List<Agent> snapshot = new ArrayList<>(agents);
         for (Agent agent : snapshot) {
