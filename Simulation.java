@@ -25,7 +25,12 @@ public class Simulation {
     public Simulation() {
         terrain = new Terrain(NB_LIGNES, NB_COLONNES);
         agents = new ArrayList<>();
-        selectionnerStrategie();
+        try {
+            selectionnerStrategie();
+        } catch (SimulationException e) {
+            System.out.println(e.getMessage());
+            strategieChoisie = Bateau.Strategie.PROTECTEUR;
+        }
         initialiserRessources();
         initialiserAgents();
         terrain.verifierPositionRessources();
@@ -38,8 +43,10 @@ public class Simulation {
 
     /**
      * Demande à l'utilisateur de choisir la stratégie des bateaux.
+     *
+     * @throws SimulationException si le choix n'est pas valide.
      */
-    private void selectionnerStrategie() {
+    private void selectionnerStrategie() throws SimulationException {
         Scanner scanner = new Scanner(System.in);
         System.out.println("=== Stratégie des bateaux ===");
         System.out.println("1. PROTECTEUR - Les bateaux sauvent en priorité les naufragés");
@@ -58,8 +65,8 @@ public class Simulation {
             strategieChoisie = Bateau.Strategie.CHASSEUR;
             System.out.println("=> Mode CHASSEUR : Les bateaux en chasse des requins !");
         } else {
-            System.out.println("Choix invalide, mode PROTECTEUR par défaut.");
-            strategieChoisie = Bateau.Strategie.PROTECTEUR;
+            scanner.close();
+            throw new SimulationException("Choix invalide, mode PROTECTEUR par défaut.");
         }
         System.out.println();
         scanner.close();
@@ -270,8 +277,8 @@ public class Simulation {
 
     private void placerRessourceAleatoire(Ressource ressource) {
         while (true) {
-            int lig = 1 + RNG.nextInt(NB_LIGNES);
-            int col = 1 + RNG.nextInt(NB_COLONNES);
+            int lig = 1 + Utils.random(NB_LIGNES);
+            int col = 1 + Utils.random(NB_COLONNES);
             if (terrain.caseEstVide(lig, col)) {
                 ressource.setPosition(lig, col);
                 terrain.setCase(lig, col, ressource);
@@ -383,11 +390,11 @@ public class Simulation {
 
     /**
      * Ajoute aléatoirement de nouveaux poissons sur la grille pendant la simulation.
-     * Chaque étape a 50% de chance d'ajouter un groupe de 2-3 poissons.
+     * Chaque étape a 50% de chance d'ajouter un groupe de 2-4 poissons.
      */
     private void gererNouvelleProductionDePoissons() {
-        if (RNG.nextDouble() < 0.5) {
-            Poisson poisson = new Poisson(2 + RNG.nextInt(2));
+        if (Utils.random(100) < 50) {
+            Poisson poisson = new Poisson(2 + Utils.random(3));
             placerRessourceAleatoire(poisson);
         }
     }
