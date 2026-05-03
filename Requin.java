@@ -7,12 +7,13 @@ import java.util.List;
 public class Requin extends Agent implements Cloneable{
     /**
      * Constructeur pour créer un requin.
+     * @param vie L'énergie initiale du requin.
      * @param ligne La ligne initiale.
      * @param colonne La colonne initiale.
      * @param nbLignes Nombre total de lignes.
      * @param nbColonnes Nombre total de colonnes.
      */
-    public Requin(int vie,int ligne, int colonne, int nbLignes, int nbColonnes) {
+    public Requin(int vie, int ligne, int colonne, int nbLignes, int nbColonnes) {
         super("Requin", vie, ligne, colonne, nbLignes, nbColonnes);
     }
 
@@ -76,7 +77,12 @@ public class Requin extends Agent implements Cloneable{
         return meilleur;
     }
 
-   @Override
+    /**
+     * Clone le requin avec une position différente pour éviter les doublons au même endroit.
+     * @return Un clone du requin avec une nouvelle position aléatoire.
+     * @throws AssertionError si le clonage échoue.
+     */
+    @Override
     public Requin clone() {
         try {
             Requin copie = (Requin) super.clone();

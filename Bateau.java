@@ -9,9 +9,12 @@ public class Bateau extends Agent {
      * Énumération des stratégies possibles pour un bateau.
      */
     public enum Strategie {
-        PROTECTEUR,  // Priorité aux naufragés
-        PECHEUR,     // Priorité à la pêche
-        CHASSEUR     // Priorité à la chasse aux requins
+        /** Priorité aux naufragés. */
+        PROTECTEUR,
+        /** Priorité à la pêche. */
+        PECHEUR,
+        /** Priorité à la chasse aux requins. */
+        CHASSEUR
     }
 
     private int humainsSauves = 0;

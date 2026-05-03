@@ -6,12 +6,39 @@ import java.util.Random;
  * Les agents ont de l'énergie, une position sur la grille et peuvent se déplacer.
  */
 public abstract class Agent implements Entite {
+    /**
+     * Générateur de nombres aléatoires partagé par tous les agents.
+     */
     protected static final Random RNG = new Random();
+
+    /**
+     * Le type de l'agent (par exemple "Requin" ou "Bateau").
+     */
     protected final String type;
+
+    /**
+     * L'énergie courante de l'agent.
+     */
     protected int energie;
+
+    /**
+     * La ligne actuelle de l'agent sur la grille.
+     */
     protected int ligne;
+
+    /**
+     * La colonne actuelle de l'agent sur la grille.
+     */
     protected int colonne;
+
+    /**
+     * Le nombre total de lignes de la grille.
+     */
     protected final int nbLignes;
+
+    /**
+     * Le nombre total de colonnes de la grille.
+     */
     protected final int nbColonnes;
 
     /**

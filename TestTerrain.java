@@ -6,11 +6,19 @@ import java.util.ArrayList;
  * @author UL2IN002 (2026fev)
  * @author Christophe Marsala (2020oct-2022oct)
  */
+/**
+ * Classe de test pour démontrer l'utilisation de la classe Terrain et des ressources.
+ * Ce programme crée un terrain, place des ressources et affiche l'état du terrain.
+ */
 public class TestTerrain {
-	public static void main(String[] args) {
-	
-		// Exemple de création de terrain
-		Terrain t = new Terrain(3,7);
+    /**
+     * Point d'entrée du programme de test.
+     * @param args Arguments de la ligne de commande (non utilisés).
+     */
+    public static void main(String[] args) {
+
+        // Exemple de création de terrain
+        Terrain t = new Terrain(3,7);
 		
 		// Terrain initial : il est vide
 		t.afficher(2);

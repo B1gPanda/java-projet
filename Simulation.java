@@ -3,6 +3,11 @@ import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
+/**
+ * Classe principale de la simulation d'une scène de sauvetage en mer.
+ * Gère la grille, les agents (requins et bateaux), les ressources marines
+ * et les interactions entre tous ces éléments.
+ */
 public class Simulation {
     private static final int NB_LIGNES = 10;
     private static final int NB_COLONNES = 10;
@@ -22,6 +27,10 @@ public class Simulation {
     private int poissonsPerdus = 0;
     private Bateau.Strategie strategieChoisie;
 
+    /**
+     * Crée et initialise une nouvelle simulation.
+     * Initialise le terrain, sélectionne la stratégie, place les ressources et crée les agents.
+     */
     public Simulation() {
         terrain = new Terrain(NB_LIGNES, NB_COLONNES);
         agents = new ArrayList<>();
@@ -36,6 +45,10 @@ public class Simulation {
         terrain.verifierPositionRessources();
     }
 
+    /**
+     * Point d'entrée de l'application de simulation.
+     * @param args Paramètres de ligne de commande (non utilisés).
+     */
     public static void main(String[] args) {
         Simulation sim = new Simulation();
         SimulationManager.getInstance().lancer(sim);
@@ -72,6 +85,9 @@ public class Simulation {
         scanner.close();
     }
 
+    /**
+     * Initialise les ressources marines sur le terrain (poissons, humains, plastiques).
+     */
     private void initialiserRessources() {
         for (int i = 0; i < 20; i++) {
             placerRessourceAleatoire(new Poisson(3 + RNG.nextInt(3)));
@@ -84,6 +100,9 @@ public class Simulation {
         }
     }
 
+    /**
+     * Initialise les agents de la simulation (requins et bateau).
+     */
     private void initialiserAgents() {
         Requin r1 = new Requin(16, 1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES);
         Requin r2 =  r1.clone();
@@ -93,6 +112,10 @@ public class Simulation {
         agents.add(new Bateau(50, 1 + RNG.nextInt(NB_LIGNES), 1 + RNG.nextInt(NB_COLONNES), NB_LIGNES, NB_COLONNES, strategieChoisie));
     }
 
+    /**
+     * Lance la simulation pour un nombre défini d'étapes.
+     * Affiche l'état initial, puis exécute chaque étape avec un délai.
+     */
     public void lancer() {
         afficherEtat(0);
         attendre();
@@ -104,6 +127,9 @@ public class Simulation {
         afficherConclusion();
     }
 
+    /**
+     * Met en pause la simulation pendant TEMPS_PAUSE_MS millisecondes.
+     */
     private void attendre() {
         try {
             Thread.sleep(TEMPS_PAUSE_MS);
@@ -112,6 +138,11 @@ public class Simulation {
         }
     }
 
+    /**
+     * Applique la couleur ANSI appropriée à un agent selon son type.
+     * @param agent L'agent à coloriser.
+     * @return La chaîne de l'agent avec codes ANSI de couleur.
+     */
     private String coloriserAgent(Agent agent) {
         if (agent instanceof Requin) {
             return ANSI_RED + agent + ANSI_RESET;
@@ -122,6 +153,10 @@ public class Simulation {
         return agent.toString();
     }
 
+    /**
+     * Effectue toutes les mises à jour pour une étape de la simulation.
+     * @param etape Le numéro de l'étape en cours.
+     */
     private void mettreAJourLesEtapes(int etape) {
         try {
             if (terrain.lesRessources().isEmpty()) {
@@ -144,6 +179,9 @@ public class Simulation {
         gererNouvelleProductionDePoissons();
     }
 
+    /**
+     * Fait croître les poissons en augmentant leur quantité.
+     */
     private void croitreLesPoissons() {
         for (Ressource r : terrain.lesRessources()) {
             if (r instanceof Poisson) {
@@ -152,6 +190,9 @@ public class Simulation {
         }
     }
 
+    /**
+     * Résout toutes les interactions entre les agents et les ressources de manière cyclique.
+     */
     private void resoudreInteractions() {
         for (Agent agent : new ArrayList<>(agents)) {
             if (!agent.isAlive()) {
@@ -168,6 +209,10 @@ public class Simulation {
         resoudreConflitsRequinBateau();
     }
 
+    /**
+     * Applique l'effet du sac plastique sur l'énergie d'un requin.
+     * @param requin Le requin affecté.
+     */
     private void appliquerEffetPlastique(Requin requin) {
         ResourceMarine ressource = ressourcesSurCase(requin.getLigne(), requin.getColonne());
         if (ressource instanceof SacPlastique) {
@@ -175,6 +220,10 @@ public class Simulation {
         }
     }
 
+    /**
+     * Gère la consommation de ressources marines par un requin.
+     * @param requin Le requin mangeant la ressource.
+     */
     private void mangerRessource(Requin requin) {
         ResourceMarine ressource = ressourcesSurCase(requin.getLigne(), requin.getColonne());
         if (ressource instanceof Poisson) {
@@ -190,6 +239,10 @@ public class Simulation {
         }
     }
 
+    /**
+     * Gère la pêche et le sauvetage d'humains par un bateau.
+     * @param bateau Le bateau effectuant les actions.
+     */
     private void pecherEtSauver(Bateau bateau) {
         ResourceMarine ressource = ressourcesSurCase(bateau.getLigne(), bateau.getColonne());
         if (ressource instanceof Poisson) {
@@ -213,6 +266,9 @@ public class Simulation {
         }
     }
 
+    /**
+     * Résout les conflits entre requins et bateaux utilisant les positions communes.
+     */
     private void resoudreConflitsRequinBateau() {
         for (int i = 0; i < agents.size(); i++) {
             for (int j = i + 1; j < agents.size(); j++) {
@@ -245,6 +301,9 @@ public class Simulation {
         }
     }
 
+    /**
+     * Nettoie les morts et les ressources vides du terrain et de la liste des agents.
+     */
     private void nettoyerMortEtRessources() {
         for (Agent agent : new ArrayList<>(agents)) {
             if (!agent.isAlive() && agent instanceof Bateau) {
@@ -263,10 +322,22 @@ public class Simulation {
         }
     }
 
+    /**
+     * Vérifie si deux entités occupent la même case sur la grille.
+     * @param a La première entité.
+     * @param b La deuxième entité.
+     * @return true si elles sont sur la même case, false sinon.
+     */
     private boolean memeCase(Entite a, Entite b) {
         return a.getLigne() == b.getLigne() && a.getColonne() == b.getColonne();
     }
 
+    /**
+     * Retourne la ressource marine à la position spécifiée, si elle existe.
+     * @param ligne La ligne de la case.
+     * @param colonne La colonne de la case.
+     * @return La ressource marine ou null.
+     */
     private ResourceMarine ressourcesSurCase(int ligne, int colonne) {
         Ressource contenu = terrain.getCase(ligne, colonne);
         if (contenu instanceof ResourceMarine) {
@@ -275,6 +346,10 @@ public class Simulation {
         return null;
     }
 
+    /**
+     * Place une ressource aléatoirement sur le terrain en trouvant une case vide.
+     * @param ressource La ressource à placer.
+     */
     private void placerRessourceAleatoire(Ressource ressource) {
         while (true) {
             int lig = 1 + Utils.random(NB_LIGNES);
@@ -287,6 +362,9 @@ public class Simulation {
         }
     }
 
+    /**
+     * Affiche la grille du terrain avec les agents et ressources colorés.
+     */
     private void afficherGrilleAgentsEtRessources() {
         System.out.println("+------+------+------+------+------+------+------+------+------+------+");
         for (int lig = 1; lig <= NB_LIGNES; lig++) {
@@ -299,6 +377,11 @@ public class Simulation {
         }
     }
 
+    /**
+     * Formate un contenu de cellule en le complétant avec des espaces.
+     * @param contenu Le contenu à formater.
+     * @return Le contenu formaté sur largeur fixe.
+     */
     private String padderCellule(String contenu) {
         int taille = 6;
         if (contenu.length() >= taille) {
@@ -311,6 +394,12 @@ public class Simulation {
         return sb.toString();
     }
 
+    /**
+     * Retourne le texte à afficher pour une cellule de la grille.
+     * @param lig La ligne.
+     * @param col La colonne.
+     * @return Le texte de la cellule (agent et/ou ressource).
+     */
     private String getCelluleTexte(int lig, int col) {
         StringBuilder affichage = new StringBuilder();
         Ressource ressource = terrain.getCase(lig, col);
@@ -330,6 +419,11 @@ public class Simulation {
         return affichage.toString();
     }
 
+    /**
+     * Retourne l'abréviation pour afficher une ressource marine.
+     * @param ressource La ressource marine.
+     * @return L'abréviation (ex: "Po" pour poisson).
+     */
     private String shortResource(ResourceMarine ressource) {
         if (ressource instanceof Poisson) {
             return "Po";
@@ -343,6 +437,12 @@ public class Simulation {
         return "Poule";
     }
 
+    /**
+     * Retourne la liste des agents situés sur une case précise.
+     * @param lig La ligne.
+     * @param col La colonne.
+     * @return Liste des agents à cette position.
+     */
     private List<Agent> agentsSurCase(int lig, int col) {
         List<Agent> result = new ArrayList<>();
         for (Agent agent : agents) {
@@ -353,6 +453,13 @@ public class Simulation {
         return result;
     }
 
+    /**
+     * Applique la couleur ANSI appropriate à une cellule selon les agents présents.
+     * @param contenu Le contenu de la cellule.
+     * @param lig La ligne.
+     * @param col La colonne.
+     * @return La cellule avec ses codes ANSI de couleur.
+     */
     private String coloriserCellule(String contenu, int lig, int col) {
         List<Agent> agentsCase = agentsSurCase(lig, col);
         if (agentsCase.isEmpty()) {
@@ -374,6 +481,11 @@ public class Simulation {
         return color + contenu + ANSI_RESET;
     }
 
+    /**
+     * Retourne l'abréviation pour afficher un ensemble d'agents.
+     * @param agentsCase La liste des agents sur une case.
+     * @return L'abréviation (ex: "Bat" pour bateau, "Bagarre3" pour 3 agents).
+     */
     private String shortAgent(List<Agent> agentsCase) {
         if (agentsCase.size() == 1) {
             Agent agent = agentsCase.get(0);
@@ -392,6 +504,10 @@ public class Simulation {
      * Ajoute aléatoirement de nouveaux poissons sur la grille pendant la simulation.
      * Chaque étape a 50% de chance d'ajouter un groupe de 2-4 poissons.
      */
+    /**
+     * Gère la génération aléatoire de nouveaux poissons chaque étape.
+     * Avec 50% de probabilité, ajoute entre 2 et 4 poissons aléatoirement positionnés.
+     */
     private void gererNouvelleProductionDePoissons() {
         if (Utils.random(100) < 50) {
             Poisson poisson = new Poisson(2 + Utils.random(3));
@@ -399,6 +515,10 @@ public class Simulation {
         }
     }
 
+    /**
+     * Affiche l'état complet de la simulation pour une étape donnée.
+     * @param etape Le numéro de l'étape à afficher.
+     */
     private void afficherEtat(int etape) {
         System.out.println("\n--- Étape " + etape + " ---");
         afficherGrilleAgentsEtRessources();
@@ -409,6 +529,9 @@ public class Simulation {
         System.out.println("Humains sauvés : " + humainsSauves + " | Humains mangés : " + humainsManges + " | Poissons pêchés : " + poissonsPeches + " | Poissons perdus : " + poissonsPerdus);
     }
 
+    /**
+     * Affiche le bilan final de la simulation avec toutes les statistiques.
+     */
     private void afficherConclusion() {
         System.out.println("\n--- Bilan final ---");
         System.out.println("Agents restants : " + agents.size());
