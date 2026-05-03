@@ -79,7 +79,15 @@ public class Requin extends Agent implements Cloneable{
    @Override
     public Requin clone() {
         try {
-            return (Requin) super.clone();
+            Requin copie = (Requin) super.clone();
+            int newLigne;
+            int newColonne;
+            do {
+                newLigne = 1 + Utils.random(nbLignes);
+                newColonne = 1 + Utils.random(nbColonnes);
+            } while (newLigne == ligne && newColonne == colonne);
+            copie.setPosition(newLigne, newColonne);
+            return copie;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError("Clonage impossible");
         }
